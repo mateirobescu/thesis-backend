@@ -19,7 +19,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Getter
-@Table(name = "events")
+@Table(
+        name = "events",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_file_seq",
+                        columnNames = {"file_id", "seq"}
+                ),
+                @UniqueConstraint(
+                        name = "uk_user_file_client_seq",
+                        columnNames = {"user_id", "file_id", "client_seq"}
+                ),
+        }
+)
 public class Event {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
