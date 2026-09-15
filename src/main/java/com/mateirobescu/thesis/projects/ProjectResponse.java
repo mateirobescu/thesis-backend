@@ -8,6 +8,7 @@ public record ProjectResponse(
         UUID workspaceId,
         String name,
         String path,
+        Long seq,
         UUID ownerId,
         Instant createdAt
 ) {
@@ -18,6 +19,7 @@ public record ProjectResponse(
                 project.getWorkspace().getId(),
                 project.getName(),
                 project.getPath(),
+                project.getSeq(),
                 project.getOwner().getId(),
                 project.getCreatedAt()
         );

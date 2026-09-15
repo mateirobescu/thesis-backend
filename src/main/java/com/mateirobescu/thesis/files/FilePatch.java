@@ -6,7 +6,6 @@ import com.mateirobescu.thesis.workspaces.Workspace;
 
 public record FilePatch (
         Project project,
-        String filename,
         String path,
         User owner
 ) { }

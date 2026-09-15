@@ -8,6 +8,8 @@ import com.mateirobescu.thesis.users.User;
 import com.mateirobescu.thesis.users.UserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+//TODO different mapper?
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.UUID;
@@ -19,40 +21,44 @@ class EventService {
     FileService fileService;
     ProjectService projectService;
     UserService userService;
+    ObjectMapper objectMapper;
 
-    public EventService(EventRepository eventRepository, FileService fileService, ProjectService projectService, UserService userService) {
+    public EventService(
+            EventRepository eventRepository,
+            FileService fileService,
+            ProjectService projectService,
+            UserService userService,
+            ObjectMapper objectMapper) {
         this.eventRepository = eventRepository;
         this.fileService = fileService;
         this.projectService = projectService;
         this.userService = userService;
+        this.objectMapper = objectMapper;
     }
 
     //TODO needs more auth and more stuff but conceptually right
     @Transactional
-    public Event createEvent(EventCreateCommand command) {
-        User user = userService.getUserById(command.userId());
+    public Event createEvent(FileEventCreateCommand command) {
+        User user = userService.getUserById(command.envelope().userId());
 
-        File file = fileService.getFileWithNewSeq(command.fileId());
-        Project project = projectService.getProjectWithNewSeq(file.getProject().getId());
+        Project project = projectService.getProjectWithNewSeq(command.envelope().projectId());
 
         Event event = Event.builder()
-                .file(file)
+                .project(project)
                 .user(user)
-                .seq(file.getSeq())
-                .projectSeq(project.getSeq())
-                .clientSeq(command.clientSeq())
-                .clientProjectSeq(command.clientProjectSeq())
-                .clientTimestamp(command.clientTimestamp())
-                .char_offset(command.char_offset())
-                .length(command.length())
-                .chars(command.chars())
+                .seq(project.getSeq())
+                .clientSeq(command.envelope().clientSeq())
+                .clientTimestamp(command.envelope().clientTimestamp())
+                .type(command.envelope().type())
+                .payload(objectMapper.valueToTree(command.payload()))
                 .build();
 
         return eventRepository.save(event);
     }
 
-    public List<Event> getFileEventsWithSeqGreaterThan(UUID fileId, Long seq) {
-        return eventRepository.findByFile_IdAndSeqGreaterThan(fileId, seq);
+    //TODO maybe throw error for non project file
+    public List<Event> getProjectEventsWithSeqGreaterThan(UUID projectId, Long seq) {
+        return eventRepository.findByProject_IdAndSeqGreaterThanOrderBySeqAsc(projectId, seq);
     }
 
 }

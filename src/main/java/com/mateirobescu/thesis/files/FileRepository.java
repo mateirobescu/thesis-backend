@@ -3,6 +3,8 @@ package com.mateirobescu.thesis.files;
 import com.mateirobescu.thesis.projects.Project;
 import com.mateirobescu.thesis.workspaces.Workspace;
 import jakarta.persistence.LockModeType;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -19,5 +21,7 @@ public interface FileRepository extends JpaRepository<File, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT f FROM File f WHERE f.id = :id")
     Optional<File> findByIdForUpdate(@Param("id") UUID id);
+
+    Optional<File> findByProject_IdAndPath(UUID project_id, String path);
 
 }

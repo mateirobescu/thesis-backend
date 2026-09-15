@@ -9,8 +9,8 @@ import java.util.UUID;
 public record FileResponse(
         UUID id,
         UUID projectId,
-        String filename,
         String path,
+        Long seq,
         UUID ownerId,
         Instant createdAt
 ) {
@@ -18,8 +18,8 @@ public record FileResponse(
         return new FileResponse(
                 file.getId(),
                 file.getProject().getId(),
-                file.getFilename(),
                 file.getPath(),
+                file.getSeq(),
                 file.getOwner().getId(),
                 file.getCreatedAt()
         );

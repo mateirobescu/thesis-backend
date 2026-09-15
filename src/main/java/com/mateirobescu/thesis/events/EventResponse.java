@@ -1,36 +1,30 @@
 package com.mateirobescu.thesis.events;
 
-import java.time.Instant;
-import java.util.UUID;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import jakarta.validation.constraints.NotNull;
+import tools.jackson.databind.JsonNode;
 
-public record EventResponse(
-        UUID id,
-        UUID file,
-        UUID user,
-        Long seq,
-        Long projectSeq,
-        Long clientSeq,
-        Long clientProjectSeq,
-        Instant serverTimestamp,
-        Instant clientTimestamp,
-        Integer offset,
-        Integer length,
-        String chars
-) {
+public record EventResponse (
+
+    @JsonUnwrapped
+    @NotNull
+    EventResponseEnvelope envelope,
+
+    @NotNull
+    JsonNode payload
+){
     public static EventResponse fromEvent(Event event) {
-        return new EventResponse(
+        return new EventResponse(new EventResponseEnvelope(
                 event.getId(),
-                event.getFile().getId(),
                 event.getUser().getId(),
+                event.getProject().getId(),
                 event.getSeq(),
-                event.getProjectSeq(),
                 event.getClientSeq(),
-                event.getClientProjectSeq(),
-                event.getServerTimestamp(),
+                event.getTimestamp(),
                 event.getClientTimestamp(),
-                event.getChar_offset(),
-                event.getLength(),
-                event.getChars()
+                event.getType()
+            ),
+            event.getPayload()
         );
     }
 }

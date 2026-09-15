@@ -15,24 +15,27 @@ class EventController {
         this.eventService = eventService;
     }
 
-    @PostMapping
-    public EventResponse createEvent(@Valid @RequestBody EventCreateRequest request) {
+    @PostMapping("/files")
+    public EventResponse createFileEvent(@Valid @RequestBody FileEventCreateRequest request) {
+
+        Event event = eventService.createEvent(
+                FileEventCreateCommand.fromRequest(request)
+        );
+
+        System.out.println(event);
+
         return EventResponse.fromEvent(
-                eventService.createEvent(
-                        EventCreateCommand.fromRequest(request)
-                )
+            event
         );
     }
 
-    //TODO might have to make responses more compact (too much useless data)
     @GetMapping
-    public EventListResponse geFiletEventsWithSeqGreaterThan(
-            @RequestParam("fileId") UUID fileId,
+    public EventListResponse getEventsWithSeqGreaterThan(
+            @RequestParam(value = "projectId") UUID projectId,
             @RequestParam("seqGreaterThan") Long seq
-    ){
+    ) {
         return EventListResponse.fromEvents(
-                eventService.getFileEventsWithSeqGreaterThan(fileId, seq)
+                eventService.getProjectEventsWithSeqGreaterThan(projectId, seq)
         );
     }
-
 }

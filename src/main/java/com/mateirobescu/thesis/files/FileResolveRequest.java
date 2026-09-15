@@ -6,16 +6,13 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
-public record FileCreateRequest (
-        @NotNull
-        UUID projectId,
-
+public record FileResolveRequest(
         @NotNull
         @NotBlank
         @ValidPath
-        String path,
+        String fullPath,
 
         @NotNull
-        UUID ownerId
+        UUID userId  //TODO should probably delete for security reasons
 ) {
 }

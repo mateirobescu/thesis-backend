@@ -1,15 +1,15 @@
 package com.mateirobescu.thesis.events;
 
-import com.mateirobescu.thesis.files.File;
+import com.mateirobescu.thesis.projects.Project;
 import com.mateirobescu.thesis.users.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UuidGenerator;
+import org.hibernate.type.SqlTypes;
+import tools.jackson.databind.JsonNode;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -19,16 +19,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Getter
+@ToString
 @Table(
         name = "events",
         uniqueConstraints = {
-                @UniqueConstraint(
-                        name = "uk_file_seq",
-                        columnNames = {"file_id", "seq"}
-                ),
-                @UniqueConstraint(
-                        name = "uk_user_file_client_seq",
-                        columnNames = {"user_id", "file_id", "client_seq"}
+               @UniqueConstraint(
+                        name = "uk_project_seq",
+                        columnNames = {"project_id", "project_seq"}
                 ),
         }
 )
@@ -37,48 +34,39 @@ public class Event {
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
     private UUID id;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "file_id", nullable = false)
-    private File file;
+    @JoinColumn(name = "project_id", nullable = false, updatable = false)
+    private Project project;
 
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Long seq;
 
     @NotNull
-    @Column(nullable = false)
-    private Long projectSeq;
-
-    @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Long clientSeq;
 
-    @NotNull
-    @Column(nullable = false)
-    private Long clientProjectSeq;
-
     @CreationTimestamp
-    @Column(name = "server_timestamp", nullable = false, updatable = false)
-    private Instant serverTimestamp;
+    @Column(nullable = false, updatable = false)
+    private Instant timestamp;
 
     @NotNull
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Instant clientTimestamp;
 
-    //TODO these should be moved into the sub event called something like FileEvent
     @NotNull
-    @Column(nullable = false)
-    private Integer char_offset;
+    @Column(nullable = false, updatable = false)
+    private EventType type;
 
     @NotNull
-    @Column(nullable = false)
-    private Integer length;
+    @Column(columnDefinition = "jsonb", nullable = false, updatable = false)
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode payload;
 
-    @NotNull
-    @Column(nullable = false)
-    private String chars;
 }
