@@ -29,6 +29,13 @@ class FileController {
         return FileResponse.fromFile(file);
     }
 
+    @GetMapping
+    public FileListResponse getFilesByProjectId(@RequestParam UUID projectId) {
+        return FileListResponse.fromFiles(
+                fileService.getFilesByProject(projectId)
+        );
+    }
+
     @PatchMapping("/{fileId}")
     public FileResponse patchFile(
             @PathVariable UUID fileId,

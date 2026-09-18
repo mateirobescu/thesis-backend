@@ -1,16 +1,19 @@
 package com.mateirobescu.thesis.projects;
 
+import com.mateirobescu.thesis.exception.NotFoundException;
 import com.mateirobescu.thesis.users.User;
 import com.mateirobescu.thesis.users.UserService;
 import com.mateirobescu.thesis.workspaces.Workspace;
 import com.mateirobescu.thesis.workspaces.WorkspacePatch;
 import com.mateirobescu.thesis.workspaces.WorkspaceService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class ProjectService {
 
     ProjectRepository projectRepository;
@@ -34,12 +37,13 @@ public class ProjectService {
         if(path != null)
             builder.path(path);
 
-        return projectRepository.save(builder.build());
+        Project savedProject = projectRepository.save(builder.build());
+        log.info("Project created id={}", savedProject.getId());
+        return savedProject;
     }
 
     public Project getProjectById(UUID id) {
-        //TODO throw custom exception
-        return projectRepository.findById(id).orElseThrow(RuntimeException::new);
+        return projectRepository.findById(id).orElseThrow(() -> new NotFoundException("Project", id));
     }
 
     public List<Project> getProjectsByWorkspace(UUID workspaceId) {
@@ -54,17 +58,20 @@ public class ProjectService {
 
         currentProject.applyPatch(new ProjectPatch(newWorkspace, request.name(), request.path(), newOwner));
 
-        return projectRepository.save(currentProject);
+        Project savedProject = projectRepository.save(currentProject);
+        log.info("Project patched id={}", currentProject.getId());
+        return savedProject;
     }
 
     public void deleteProject(UUID id) {
         Project project = this.getProjectById(id);
+        log.info("Project deleting id={}", project.getId());
         projectRepository.delete(project);
+        log.info("Project deleted id={}", project.getId());
     }
 
     public Project getProjectWithNewSeq(UUID id) {
-        //TODO throw custom exception
-        Project project = projectRepository.findByIdForUpdate(id).orElseThrow(RuntimeException::new);
+        Project project = projectRepository.findByIdForUpdate(id).orElseThrow(() -> new NotFoundException("Project", id));
         return projectRepository.save(project.incrementSeq());
     }
 }

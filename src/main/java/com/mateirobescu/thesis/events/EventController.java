@@ -18,11 +18,9 @@ class EventController {
     @PostMapping("/files")
     public EventResponse createFileEvent(@Valid @RequestBody FileEventCreateRequest request) {
 
-        Event event = eventService.createEvent(
+        Event event = eventService.createFileEvent(
                 FileEventCreateCommand.fromRequest(request)
         );
-
-        System.out.println(event);
 
         return EventResponse.fromEvent(
             event

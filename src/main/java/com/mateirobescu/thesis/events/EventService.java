@@ -6,6 +6,7 @@ import com.mateirobescu.thesis.projects.Project;
 import com.mateirobescu.thesis.projects.ProjectService;
 import com.mateirobescu.thesis.users.User;
 import com.mateirobescu.thesis.users.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 //TODO different mapper?
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 class EventService {
 
     EventRepository eventRepository;
@@ -38,7 +40,7 @@ class EventService {
 
     //TODO needs more auth and more stuff but conceptually right
     @Transactional
-    public Event createEvent(FileEventCreateCommand command) {
+    public Event createFileEvent(FileEventCreateCommand command) {
         User user = userService.getUserById(command.envelope().userId());
 
         Project project = projectService.getProjectWithNewSeq(command.envelope().projectId());
@@ -53,7 +55,9 @@ class EventService {
                 .payload(objectMapper.valueToTree(command.payload()))
                 .build();
 
-        return eventRepository.save(event);
+        Event savedEvent = eventRepository.save(event);
+        log.info("Event created id={}", savedEvent.getId());
+        return savedEvent;
     }
 
     //TODO maybe throw error for non project file

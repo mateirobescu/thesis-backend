@@ -1,5 +1,6 @@
 package com.mateirobescu.thesis.files;
 
+import com.mateirobescu.thesis.exception.NotFoundException;
 import com.mateirobescu.thesis.files.File;
 import com.mateirobescu.thesis.files.FilePatch;
 import com.mateirobescu.thesis.files.FilePatchRequest;
@@ -10,6 +11,7 @@ import com.mateirobescu.thesis.users.User;
 import com.mateirobescu.thesis.users.UserService;
 import com.mateirobescu.thesis.projects.Project;
 import com.mateirobescu.thesis.projects.ProjectService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
@@ -18,6 +20,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class FileService {
 
     FileRepository fileRepository;
@@ -39,12 +42,13 @@ public class FileService {
                 .owner(user)
                 .build();
 
-        return fileRepository.save(file);
+        File savedFile = fileRepository.save(file);
+        log.info("File created id={}", savedFile.getId());
+        return savedFile;
     }
 
     public File getFileById(UUID id) {
-        //TODO throw custom exception
-        return fileRepository.findById(id).orElseThrow(RuntimeException::new);
+        return fileRepository.findById(id).orElseThrow(() -> new NotFoundException("Project", id));
     }
 
     public List<File> getFilesByProject(UUID projectId) {
@@ -59,24 +63,25 @@ public class FileService {
 
         currentFile.applyPatch(new FilePatch(newproject, request.path(), newOwner));
 
-        return fileRepository.save(currentFile);
+        File savedFile = fileRepository.save(currentFile);
+        log.info("File patched id={}", currentFile.getId());
+        return savedFile;
     }
 
     public void deleteFile(UUID id) {
-        File File = this.getFileById(id);
-        fileRepository.delete(File);
+        File file = this.getFileById(id);
+        log.info("File deleting id={}", file.getId());
+        fileRepository.delete(file);
+        log.info("File deleted id={}", file.getId());
     }
 
     public File getFileWithNewSeq(UUID id) {
-        //TODO throw custom exception
-        File file = fileRepository.findByIdForUpdate(id).orElseThrow(RuntimeException::new);
+        File file = fileRepository.findByIdForUpdate(id).orElseThrow(() -> new NotFoundException("File", id));
         return fileRepository.save(file.incrementSeq());
     }
 
     public FileResolveResult resolveOrCreateFile(UUID projectId, UUID userId, String fullPath) {
         Optional<File> existing = fileRepository.findByProject_IdAndPath(projectId, fullPath);
-
-        System.err.println("CALLED");
 
         if (existing.isPresent())
             return new FileResolveResult(existing.get(), false);

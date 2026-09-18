@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handleNotFound(NotFoundException e) {
-        log.warn("Resource not found: {}", e.getMessage());
+        log.info("Resource not found: {}", e.getMessage());
         return this.build(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
@@ -29,13 +29,13 @@ public class GlobalExceptionHandler {
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Validation failed");
 
-        log.warn("Validation failed: {}", message);
+        log.debug("Validation failed: {}", message);
         return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException e) {
-        log.warn("Malformed request body: {}", e.getMostSpecificCause().getMessage());
+        log.info("Malformed request received: {}", e.getMostSpecificCause().getMessage());
         return build(HttpStatus.BAD_REQUEST, "Malformed request body: " + e.getMostSpecificCause().getMessage());
     }
 

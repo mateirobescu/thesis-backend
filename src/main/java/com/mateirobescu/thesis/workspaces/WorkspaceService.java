@@ -1,14 +1,17 @@
 package com.mateirobescu.thesis.workspaces;
 
+import com.mateirobescu.thesis.exception.NotFoundException;
 import com.mateirobescu.thesis.users.User;
 import com.mateirobescu.thesis.users.UserPatchRequest;
 import com.mateirobescu.thesis.users.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class WorkspaceService {
 
     WorkspaceRepository workspaceRepository;
@@ -26,12 +29,13 @@ public class WorkspaceService {
                 .owner(user)
                 .build();
 
-        return workspaceRepository.save(workspace);
+        Workspace savedWorkspace = workspaceRepository.save(workspace);
+        log.info("Workspace created id={}", savedWorkspace.getId());
+        return savedWorkspace;
     }
 
     public Workspace getWorkspaceById(UUID id) {
-        //TODO throw custom exception
-        return workspaceRepository.findById(id).orElseThrow(RuntimeException::new);
+        return workspaceRepository.findById(id).orElseThrow(() -> new NotFoundException("Workspace", id));
     }
 
     public List<Workspace> getWorkspacesByUser(UUID userId) {
@@ -53,11 +57,15 @@ public class WorkspaceService {
 
         currentWorkspace.applyPatch(new WorkspacePatch(request.name(), newOwner));
 
-        return workspaceRepository.save(currentWorkspace);
+        Workspace savedWorkspace = workspaceRepository.save(currentWorkspace);
+        log.info("Workspace patched id={}", currentWorkspace.getId());
+        return savedWorkspace;
     }
 //
     public void deleteWorkspace(UUID id) {
         Workspace currentWorkspace = this.getWorkspaceById(id);
+        log.info("Workspace deleting id={}", currentWorkspace.getId());
         workspaceRepository.delete(currentWorkspace);
+        log.info("Workspace deleted id={}", currentWorkspace.getId());
     }
 }
