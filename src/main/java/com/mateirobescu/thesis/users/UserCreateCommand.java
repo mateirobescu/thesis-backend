@@ -1,10 +1,11 @@
 package com.mateirobescu.thesis.users;
 
-import jakarta.validation.constraints.Email;
+import lombok.Builder;
 
-public record UserPatchRequest(
-        @Email
+@Builder
+public record UserCreateCommand (
         String email,
+        String hashedPassword,
         String firstName,
         String lastName
 ) {

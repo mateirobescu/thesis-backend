@@ -4,10 +4,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.time.Instant;
@@ -43,6 +44,29 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleNoEndpointFound(NoHandlerFoundException e) {
         log.warn("No endpoint found for {} {}", e.getHttpMethod(), e.getRequestURL());
         return build(HttpStatus.NOT_FOUND, "No such endpoint: " + e.getRequestURL());
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
+        log.info("Method not supported: {}", e.getMessage());
+        return build(HttpStatus.METHOD_NOT_ALLOWED, e.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> authenticationFailure(AuthenticationException e) {
+        log.warn("Authentication failed: {}", e.getMessage());
+        return build(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
+        String message = String.format(
+                "Invalid value for parameter '%s': expected %s",
+                e.getName(),
+                e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "a different type"
+        );
+        log.info(message);
+        return build(HttpStatus.BAD_REQUEST, message);
     }
 
     @ExceptionHandler(Exception.class)

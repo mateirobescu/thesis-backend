@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("files")
+@RequestMapping("/projects/{projectId}/files")
 class FileController {
     FileService fileService;
 
@@ -19,18 +19,27 @@ class FileController {
 
     //TODO to deprecate
     @PostMapping
-    public FileResponse createFile(@Valid @RequestBody FileCreateRequest request) {
-        return FileResponse.fromFile(fileService.createFile(request.path(), request.projectId(), request.ownerId()));
+    public FileResponse createFile(@PathVariable UUID projectId, @Valid @RequestBody FileCreateRequest request) {
+        return FileResponse.fromFile(fileService.createFile(FileCreateCommand.fromRequest(projectId, request)));
     }
 
     @GetMapping("/{fileId}")
-    public FileResponse getFile(@PathVariable UUID fileId) {
-        File file = fileService.getFileById(fileId);
+    public FileResponse getFile(@PathVariable UUID projectId, @PathVariable UUID fileId) {
+        File file = fileService.getFileById(projectId, fileId);
+        return FileResponse.fromFile(file);
+    }
+
+    @GetMapping("/by-path")
+    public FileResponse getFileByPath(
+            @PathVariable UUID projectId,
+            @RequestParam String path
+    ) {
+        File file = fileService.getFileByPath(projectId, path);
         return FileResponse.fromFile(file);
     }
 
     @GetMapping
-    public FileListResponse getFilesByProjectId(@RequestParam UUID projectId) {
+    public FileListResponse getFiles(@PathVariable UUID projectId) {
         return FileListResponse.fromFiles(
                 fileService.getFilesByProject(projectId)
         );
@@ -38,30 +47,18 @@ class FileController {
 
     @PatchMapping("/{fileId}")
     public FileResponse patchFile(
+            @PathVariable UUID projectId,
             @PathVariable UUID fileId,
             @Valid @RequestBody FilePatchRequest request
     ) {
         //TODO don't like the request being passed directly
-        return FileResponse.fromFile(fileService.patchFile(fileId, request));
+        return FileResponse.fromFile(fileService.patchFile(projectId, fileId, request));
     }
 
     //TODO maybe handle this differently?
     @DeleteMapping("/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable UUID fileId) {
-        fileService.deleteFile(fileId);
+    public ResponseEntity<Void> deleteFile(@PathVariable UUID projectId, @PathVariable UUID fileId) {
+        fileService.markAsDeleted(projectId, fileId);
         return ResponseEntity.noContent().build();
     }
-
-    //TODO maybe move these to another controller?
-    //TODO also wrong route I wanted /projects/{projectId}/files/resolve
-    @PostMapping("/projects/{projectId}/resolve")
-    public ResponseEntity<FileResolveResponse> resolveFile(@PathVariable UUID projectId, @Valid @RequestBody FileResolveRequest request) {
-        FileResolveResult result = fileService.resolveOrCreateFile(projectId, request.userId(), request.fullPath());
-
-        return ResponseEntity.status(
-                result.created() ? HttpStatus.CREATED : HttpStatus.OK
-        ).body(FileResolveResponse.fromResult(result));
-    }
-
-
 }

@@ -18,7 +18,7 @@ class ProjectController {
 
     @PostMapping
     public ProjectResponse createProject(@Valid @RequestBody ProjectCreateRequest request) {
-        return ProjectResponse.fromProject(projectService.createProject(request.name(), request.path(), request.workspaceId(), request.ownerId()));
+        return ProjectResponse.fromProject(projectService.createProject(ProjectCreateCommand.fromRequest(request)));
     }
 
     //    @GetMapping

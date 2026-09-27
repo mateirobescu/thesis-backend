@@ -22,10 +22,10 @@ public class WorkspaceService {
         this.userService = userService;
     }
 
-    public Workspace createWorkspace(String name, UUID userId) {
-        User user = userService.getUserById(userId);
+    public Workspace createWorkspace(WorkspaceCreateCommand command) {
+        User user = userService.getUserById(command.ownerId());
         Workspace workspace = Workspace.builder()
-                .name(name)
+                .name(command.name())
                 .owner(user)
                 .build();
 

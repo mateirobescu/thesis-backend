@@ -33,12 +33,12 @@ public class FileService {
         this.userService = userService;
     }
 
-    public File createFile(String path, UUID projectId, UUID userId) {
-        User user = userService.getUserById(userId);
-        Project project = projectService.getProjectById(projectId);
+    public File createFile(FileCreateCommand command) {
+        User user = userService.getUserById(command.ownerId());
+        Project project = projectService.getProjectById(command.projectId());
         File file = File.builder()
                 .project(project)
-                .path(path)
+                .path(command.path())
                 .owner(user)
                 .build();
 
@@ -47,54 +47,35 @@ public class FileService {
         return savedFile;
     }
 
-    public File getFileById(UUID id) {
-        return fileRepository.findById(id).orElseThrow(() -> new NotFoundException("Project", id));
+    public File getFileById(UUID projectId, UUID id) {
+        return fileRepository.findByProject_IdAndIdAndDeletedAtIsNull(projectId, id).orElseThrow(() -> new NotFoundException("File", id));
+    }
+
+    //TODO change the error to make it more explicit, not just path is ambiguous
+    public File getFileByPath(UUID projectId, String path) {
+        return fileRepository.findByProject_IdAndPathAndDeletedAtIsNull(projectId, path).orElseThrow(() -> new NotFoundException("File", path));
     }
 
     public List<File> getFilesByProject(UUID projectId) {
         Project project = projectService.getProjectById(projectId);
-        return fileRepository.findByProject(project);
+        return fileRepository.findByProjectAndDeletedAtIsNull(project);
     }
 
-    public File patchFile(UUID id, FilePatchRequest request) {
-        File currentFile = this.getFileById(id);
+    public File patchFile(UUID projectId,UUID id, FilePatchRequest request) {
+        File currentFile = this.getFileById(projectId, id);
         User newOwner = request.ownerId() != null ? userService.getUserById(request.ownerId()) : null;
-        Project newproject = request.projectId() != null ? projectService.getProjectById(request.projectId()) : null;
 
-        currentFile.applyPatch(new FilePatch(newproject, request.path(), newOwner));
+        currentFile.applyPatch(new FilePatch(request.path(), newOwner));
 
         File savedFile = fileRepository.save(currentFile);
         log.info("File patched id={}", currentFile.getId());
         return savedFile;
     }
 
-    public void deleteFile(UUID id) {
-        File file = this.getFileById(id);
-        log.info("File deleting id={}", file.getId());
-        fileRepository.delete(file);
-        log.info("File deleted id={}", file.getId());
-    }
-
-    public File getFileWithNewSeq(UUID id) {
-        File file = fileRepository.findByIdForUpdate(id).orElseThrow(() -> new NotFoundException("File", id));
-        return fileRepository.save(file.incrementSeq());
-    }
-
-    public FileResolveResult resolveOrCreateFile(UUID projectId, UUID userId, String fullPath) {
-        Optional<File> existing = fileRepository.findByProject_IdAndPath(projectId, fullPath);
-
-        if (existing.isPresent())
-            return new FileResolveResult(existing.get(), false);
-
-        try {
-            File created = this.createFile(fullPath, projectId, userId);
-            return new FileResolveResult(created, true);
-        } catch (DataIntegrityViolationException e) {
-            // just fetch it again, as it should exist
-            return fileRepository.findByProject_IdAndPath(projectId, fullPath)
-                    .map(file -> new FileResolveResult(file, false))
-                    .orElseThrow(() -> e);
-        }
+    public void markAsDeleted(UUID projectId, UUID id) {
+        File file = this.getFileById(projectId, id).markAsDeleted();
+        fileRepository.save(file);
+        log.info("File marked as deleted id={}", file.getId());
     }
 
 }

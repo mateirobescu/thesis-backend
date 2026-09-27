@@ -7,15 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record FileCreateRequest (
-        @NotNull
-        UUID projectId,
-
-        @NotNull
         @NotBlank
         @ValidPath
-        String path,
-
-        @NotNull
-        UUID ownerId
+        String path
 ) {
 }

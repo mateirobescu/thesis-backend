@@ -1,6 +1,7 @@
 package com.mateirobescu.thesis.users;
 
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,10 +17,10 @@ class UserController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public UserResponse postCreateUser(@Valid @RequestBody UserCreateRequest request) {
-        return UserResponse.fromUser(userService.createUser());
-    }
+//    @PostMapping
+//    public UserResponse postCreateUser(@Valid @RequestBody UserCreateRequest request) {
+//        return UserResponse.fromUser(userService.createUser(UserCreateCommand.fromRequest(request)));
+//    }
 
     @GetMapping
     public UserListResponse getAllUsers() {
@@ -38,7 +39,7 @@ class UserController {
             @Valid @RequestBody UserPatchRequest request
     ) {
         //TODO don't like the request arriving into the service
-        return UserResponse.fromUser(userService.patchUser(userId, request));
+        return UserResponse.fromUser(userService.patchUser(userId, UserPatchCommand.fromRequest(request)));
     }
 
     @DeleteMapping("/{userId}")

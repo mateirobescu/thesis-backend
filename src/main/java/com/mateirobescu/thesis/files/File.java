@@ -21,12 +21,19 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @Getter
+/*
+TODO will have to use this
+DROP INDEX IF EXISTS uk_files_project_path; -- remove whatever ddl-auto generated before
+CREATE UNIQUE INDEX uk_files_project_path_active
+ON files (project_id, path)
+WHERE deleted_at IS NULL;
+ */
 @Table(
     name = "files",
     uniqueConstraints = {
         @UniqueConstraint(
             name = "uk_files_project_path",
-            columnNames = {"project_id", "path"}
+            columnNames = {"project_id", "path", "deleted_at"}
         )
     }
 )
@@ -66,9 +73,20 @@ public class File {
     @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
+    private Instant deletedAt;
+
+    public File markAsDeleted() {
+        this.deletedAt = Instant.now();
+        return this;
+    }
+
+    public File restoreFile() {
+        this.deletedAt = null;
+        return this;
+    }
+
     public File applyPatch(FilePatch patch) {
         if(patch.path() != null) this.path = patch.path();
-        if(patch.project() != null) this.project = patch.project();
         if(patch.owner() != null) this.owner = patch.owner();
         return this;
     }

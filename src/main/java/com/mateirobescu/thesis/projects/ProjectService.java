@@ -26,16 +26,16 @@ public class ProjectService {
         this.userService = userService;
     }
 
-    public Project createProject(String name, String path, UUID workspaceId, UUID userId) {
-        User user = userService.getUserById(userId);
-        Workspace workspace = workspaceService.getWorkspaceById(workspaceId);
+    public Project createProject(ProjectCreateCommand command) {
+        User user = userService.getUserById(command.ownerId());
+        Workspace workspace = workspaceService.getWorkspaceById(command.workspaceId());
         var builder = Project.builder()
-                .name(name)
+                .name(command.name())
                 .workspace(workspace)
                 .owner(user);
 
-        if(path != null)
-            builder.path(path);
+        if(command.path() != null)
+            builder.path(command.path());
 
         Project savedProject = projectRepository.save(builder.build());
         log.info("Project created id={}", savedProject.getId());

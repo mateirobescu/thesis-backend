@@ -8,11 +8,10 @@ import java.util.UUID;
 public record ProjectCreateRequest (
         @NotNull
         UUID workspaceId,
-        @NotNull
+
         @NotBlank
         String name,
-        String path,
-        @NotNull
-        UUID ownerId
+
+        String path
 ) {
 }

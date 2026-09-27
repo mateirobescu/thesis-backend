@@ -6,10 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.UUID;
 
 public record WorkspaceCreateRequest(
-        @NotNull
         @NotBlank
-        String name,
-        @NotNull
-        UUID ownerId
+        String name
 ) {
 }

@@ -18,7 +18,7 @@ class WorkspaceController {
 
     @PostMapping
     public WorkspaceResponse createWorkspace(@Valid @RequestBody WorkspaceCreateRequest request) {
-        return WorkspaceResponse.fromWorkspace(workspaceService.createWorkspace(request.name(), request.ownerId()));
+        return WorkspaceResponse.fromWorkspace(workspaceService.createWorkspace(WorkspaceCreateCommand.fromRequest(request)));
     }
 
 //    @GetMapping
