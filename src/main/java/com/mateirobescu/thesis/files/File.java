@@ -1,7 +1,6 @@
 package com.mateirobescu.thesis.files;
 
 import com.mateirobescu.thesis.projects.Project;
-import com.mateirobescu.thesis.projects.ProjectPatch;
 import com.mateirobescu.thesis.users.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -16,27 +15,18 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * A file inside a project, identified there by its path. A path is unique per project among files that are not
+ * soft-deleted; this is the partial unique index {@code uk_files_project_path_active}, which cannot be expressed
+ * in JPA and is defined in the Flyway migration. The file is soft-deleted through {@code deletedAt}, which
+ * {@link #restoreFile()} clears again, and {@code version} is used for optimistic locking.
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
-/*
-TODO will have to use this
-DROP INDEX IF EXISTS uk_files_project_path; -- remove whatever ddl-auto generated before
-CREATE UNIQUE INDEX uk_files_project_path_active
-ON files (project_id, path)
-WHERE deleted_at IS NULL;
- */
-@Table(
-    name = "files",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_files_project_path",
-            columnNames = {"project_id", "path", "deleted_at"}
-        )
-    }
-)
+@Table(name = "files")
 public class File {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
@@ -52,18 +42,6 @@ public class File {
     @Column(nullable = false)
     private String path;
 
-    //TODO exclude this from the builder
-    //TODO maybe change in the future?
-    @NotNull
-    @Builder.Default
-    @Column(nullable = false, columnDefinition = "bigint default 0")
-    private Long seq = 0L;
-
-    public File incrementSeq() {
-        this.seq++;
-        return this;
-    }
-
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -75,7 +53,10 @@ public class File {
 
     private Instant deletedAt;
 
-    public File markAsDeleted() {
+    @Version
+    private Long version;
+
+    public File markDeleted() {
         this.deletedAt = Instant.now();
         return this;
     }

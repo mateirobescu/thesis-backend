@@ -4,8 +4,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,6 +18,11 @@ import org.hibernate.annotations.UuidGenerator;
 import java.time.Instant;
 import java.util.UUID;
 
+/**
+ * A user account. It is soft-deleted through {@code deletedAt}, counts as verified once {@code emailVerifiedAt}
+ * is set, and uses {@code version} for optimistic locking. Email uniqueness among users that are not soft-deleted is the partial
+ * unique index {@code uk_users_email_active}, defined in the Flyway migration.
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -48,6 +55,12 @@ public class User {
 
     private Instant deletedAt;
 
+    //TODO some recurring tasks to disable old unactivated accounts
+    private Instant emailVerifiedAt;
+
+    @Version
+    private Long version;
+
     public User markDeleted() {
         this.deletedAt = Instant.now();
         return this;
@@ -56,6 +69,15 @@ public class User {
     public User unmarkDeleted() {
         this.deletedAt = null;
         return this;
+    }
+
+    public User markEmailVerified() {
+        this.emailVerifiedAt = Instant.now();
+        return this;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
     }
 
     public User patch(UserPatchCommand command) {

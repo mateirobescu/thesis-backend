@@ -1,10 +1,11 @@
 package com.mateirobescu.thesis.files;
 
+import com.mateirobescu.thesis.validation.ValidPath;
+
 import java.util.UUID;
 
 public record FilePatchRequest (
-        UUID projectId,
-        String filename,
+        @ValidPath
         String path,
         UUID ownerId
 ) {}

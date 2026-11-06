@@ -2,6 +2,7 @@ package com.mateirobescu.thesis.workspaces;
 
 import com.mateirobescu.thesis.users.*;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ class WorkspaceController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public WorkspaceResponse createWorkspace(@Valid @RequestBody WorkspaceCreateRequest request) {
         return WorkspaceResponse.fromWorkspace(workspaceService.createWorkspace(WorkspaceCreateCommand.fromRequest(request)));
     }
@@ -37,8 +39,9 @@ class WorkspaceController {
             @PathVariable UUID workspaceId,
             @Valid @RequestBody WorkspacePatchRequest request
     ) {
-        //TODO don't like the request being passed directly
-        return WorkspaceResponse.fromWorkspace(workspaceService.patchWorkspace(workspaceId, request));
+        return WorkspaceResponse.fromWorkspace(
+                workspaceService.patchWorkspace(workspaceId, WorkspacePatchCommand.fromRequest(request))
+        );
     }
 
     @DeleteMapping("/{workspaceId}")

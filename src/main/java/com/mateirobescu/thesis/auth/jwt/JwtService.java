@@ -1,9 +1,5 @@
 package com.mateirobescu.thesis.auth.jwt;
 
-import com.mateirobescu.thesis.auth.refreshtoken.RefreshToken;
-import com.mateirobescu.thesis.auth.refreshtoken.RefreshTokenService;
-import com.mateirobescu.thesis.exception.AuthenticationException;
-import com.mateirobescu.thesis.exception.NotFoundException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -20,16 +16,13 @@ import java.util.UUID;
 public class JwtService {
     private final SecretKey secretKey;
     private final long accessTokenValidityMinutes;
-    private final RefreshTokenService refreshTokenService;
 
     public JwtService(
-            @Value("${jwt.secret}") String secret,
-            @Value("${jwt.access-token-validity-minutes:15}") long accessTokenValidityMinutes,
-            RefreshTokenService refreshTokenService
+            @Value("${auth.jwt.secret}") String secret,
+            @Value("${auth.jwt.access-token-validity-minutes:15}") long accessTokenValidityMinutes
     ) {
         this.secretKey = Keys.hmacShaKeyFor(secret.getBytes());
         this.accessTokenValidityMinutes = accessTokenValidityMinutes;
-        this.refreshTokenService = refreshTokenService;
     }
 
     public String generateAccessToken(UUID userId) {
@@ -50,10 +43,5 @@ public class JwtService {
                 .getPayload();
 
         return UUID.fromString(claims.getSubject());
-    }
-
-    public String refreshAccessToken(String rawRefreshToken) {
-        RefreshToken token = this.refreshTokenService.getValidToken(rawRefreshToken);
-        return this.generateAccessToken(token.getUser().getId());
     }
 }

@@ -1,21 +1,14 @@
 package com.mateirobescu.thesis.auth.refreshtoken;
 
-import com.mateirobescu.thesis.exception.AuthenticationException;
-import com.mateirobescu.thesis.exception.NotFoundException;
+import com.mateirobescu.thesis.auth.token.TokenUtils;
 import com.mateirobescu.thesis.exception.SessionExpiredException;
 import com.mateirobescu.thesis.users.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Base64;
-import java.util.concurrent.TimeUnit;
 
 @Service
 public class RefreshTokenService {
@@ -24,7 +17,7 @@ public class RefreshTokenService {
     private final Long tokenValidityDays;
 
     public RefreshTokenService(
-            @Value("${refresh-token-validity:30}") Long tokenValidityDays,
+            @Value("${auth.refresh-token.validity-days:30}") Long tokenValidityDays,
             RefreshTokenRepository refreshTokenRepository
     ) {
         this.tokenValidityDays = tokenValidityDays;
@@ -32,9 +25,8 @@ public class RefreshTokenService {
     }
 
     public String issueRefreshToken(User user) {
-
-        String token = generateSecureRandomToken();
-        String tokenHash = hashToken(token);
+        String rawToken = TokenUtils.generateSecureRandomToken();
+        String tokenHash = TokenUtils.hashToken(rawToken);
         Instant expirationTimestamp = Instant.now().plus(tokenValidityDays, ChronoUnit.DAYS);
 
         RefreshToken refreshToken = RefreshToken.builder()
@@ -45,23 +37,7 @@ public class RefreshTokenService {
 
         refreshTokenRepository.save(refreshToken);
 
-        return token;
-    }
-
-    private String generateSecureRandomToken() {
-        byte[] randomBytes = new byte[32];
-        new SecureRandom().nextBytes(randomBytes);
-        return Base64.getEncoder().withoutPadding().encodeToString(randomBytes);
-    }
-
-    private String hashToken(String rawToken) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(rawToken.getBytes(StandardCharsets.UTF_8));
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 not available", e);
-        }
+        return rawToken;
     }
 
     private void revokeRefreshToken(RefreshToken token) {
@@ -77,10 +53,10 @@ public class RefreshTokenService {
         return this.issueRefreshToken(user);
     }
 
-    public RefreshToken getValidToken(String rawToken) {
-        String hashedToken = this.hashToken(rawToken);
+    public RefreshToken getValidRefreshToken(String rawToken) {
+        String tokenHash = TokenUtils.hashToken(rawToken);
         //TODO maybe change the way we throw here ??
-        return refreshTokenRepository.findByTokenHashAndExpiresAtAfterAndRevokedAtIsNull(hashedToken, Instant.now())
+        return refreshTokenRepository.findByTokenHashAndExpiresAtAfterAndRevokedAtIsNull(tokenHash, Instant.now())
                 .orElseThrow(SessionExpiredException::new);
     }
 

@@ -10,7 +10,6 @@ public record FileResponse(
         UUID id,
         UUID projectId,
         String path,
-        Long seq,
         UUID ownerId,
         Instant createdAt
 ) {
@@ -19,7 +18,6 @@ public record FileResponse(
                 file.getId(),
                 file.getProject().getId(),
                 file.getPath(),
-                file.getSeq(),
                 file.getOwner().getId(),
                 file.getCreatedAt()
         );

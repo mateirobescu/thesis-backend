@@ -19,20 +19,18 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * A project inside a workspace. Its (path, name) pair is unique per workspace among projects that are not soft-deleted; this is
+ * the partial unique index {@code uk_projects_workspace_path_name_active}, which cannot be expressed in JPA and is
+ * defined in the Flyway migration. It is soft-deleted through {@code deletedAt}, {@code seq} is the last sequence
+ * number handed out to an operation of the project, and {@code version} is used for optimistic locking.
+ */
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 @Getter
-@Table(
-    name = "projects",
-    uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_projects_workspace_path_name",
-            columnNames = {"workspace_id", "path", "name"}
-        )
-    }
-)
+@Table(name = "projects")
 public class Project {
     @Id
     @UuidGenerator(style = UuidGenerator.Style.VERSION_7)
@@ -48,6 +46,7 @@ public class Project {
     @Column(nullable = false)
     private String name;
 
+    //TODO maybe make the path the same as for files?
     @NotNull
     @NotBlank
     @Builder.Default
@@ -70,6 +69,11 @@ public class Project {
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
 
+    private Instant deletedAt;
+
+    @Version
+    private Long version;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -80,6 +84,11 @@ public class Project {
         if(patch.path() != null) this.path = patch.path();
         if(patch.workspace() != null) this.workspace = patch.workspace();
         if(patch.owner() != null) this.owner = patch.owner();
+        return this;
+    }
+
+    public Project markDeleted() {
+        this.deletedAt = Instant.now();
         return this;
     }
 

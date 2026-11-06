@@ -6,6 +6,10 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.UUID;
 
+/**
+ * Data needed to create a project. The path may be {@code null}, in which case the project is created at
+ * {@code "/"}.
+ */
 public record ProjectCreateCommand (
         UUID workspaceId,
         String name,

@@ -19,6 +19,7 @@ class FileController {
 
     //TODO to deprecate
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public FileResponse createFile(@PathVariable UUID projectId, @Valid @RequestBody FileCreateRequest request) {
         return FileResponse.fromFile(fileService.createFile(FileCreateCommand.fromRequest(projectId, request)));
     }
@@ -51,14 +52,15 @@ class FileController {
             @PathVariable UUID fileId,
             @Valid @RequestBody FilePatchRequest request
     ) {
-        //TODO don't like the request being passed directly
-        return FileResponse.fromFile(fileService.patchFile(projectId, fileId, request));
+        return FileResponse.fromFile(
+                fileService.patchFile(projectId, fileId, FilePatchCommand.fromRequest(request))
+        );
     }
 
     //TODO maybe handle this differently?
     @DeleteMapping("/{fileId}")
     public ResponseEntity<Void> deleteFile(@PathVariable UUID projectId, @PathVariable UUID fileId) {
-        fileService.markAsDeleted(projectId, fileId);
+        fileService.deleteFile(projectId, fileId);
         return ResponseEntity.noContent().build();
     }
 }

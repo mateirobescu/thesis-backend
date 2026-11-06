@@ -2,6 +2,7 @@ package com.mateirobescu.thesis.projects;
 
 import com.mateirobescu.thesis.workspaces.*;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,6 +18,7 @@ class ProjectController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ProjectResponse createProject(@Valid @RequestBody ProjectCreateRequest request) {
         return ProjectResponse.fromProject(projectService.createProject(ProjectCreateCommand.fromRequest(request)));
     }
@@ -37,8 +39,9 @@ class ProjectController {
             @PathVariable UUID projectId,
             @Valid @RequestBody ProjectPatchRequest request
     ) {
-        //TODO don't like the request being passed directly
-        return ProjectResponse.fromProject(projectService.patchProject(projectId, request));
+        return ProjectResponse.fromProject(
+                projectService.patchProject(projectId, ProjectPatchCommand.fromRequest(request))
+        );
     }
 
     @DeleteMapping("/{projectId}")

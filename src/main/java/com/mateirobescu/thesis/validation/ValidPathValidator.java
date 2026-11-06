@@ -12,6 +12,9 @@ public class ValidPathValidator implements ConstraintValidator<ValidPath, String
         if (path == null)
             return true;
 
+        if(path.isEmpty())
+            return false;
+
         if (path.contains("\\"))
             return false;
 
@@ -19,6 +22,10 @@ public class ValidPathValidator implements ConstraintValidator<ValidPath, String
             return false;
 
         if (path.contains("//")) {
+            return false;
+        }
+
+        if (path.equals("..") || path.startsWith("../")) {
             return false;
         }
 

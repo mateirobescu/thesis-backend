@@ -6,10 +6,18 @@ import org.springframework.security.core.Authentication;
 
 import java.util.UUID;
 
+/**
+ * Data needed to create a workspace. The constructor trims the name.
+ */
 public record WorkspaceCreateCommand(
         String name,
         UUID ownerId
 ) {
+
+    public WorkspaceCreateCommand {
+        name = name.trim();
+    }
+
     public static WorkspaceCreateCommand fromRequest(WorkspaceCreateRequest request) {
         return new WorkspaceCreateCommand(request.name(), AuthUtils.getCurrentUserId());
     }

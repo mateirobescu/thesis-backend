@@ -1,9 +1,5 @@
 package com.mateirobescu.thesis.files;
 
-import com.mateirobescu.thesis.events.Event;
-import com.mateirobescu.thesis.events.EventListResponse;
-import com.mateirobescu.thesis.events.EventResponse;
-
 import java.util.Arrays;
 import java.util.List;
 
