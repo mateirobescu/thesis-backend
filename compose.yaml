@@ -1,9 +1,14 @@
 services:
   postgres:
-    image: 'postgres:latest'
+    image: 'postgres:18'
     environment:
       - 'POSTGRES_DB=mydatabase'
       - 'POSTGRES_PASSWORD=secret'
       - 'POSTGRES_USER=myuser'
     ports:
       - '5432:5432'
+  mailpit:
+    image: 'axllent/mailpit'
+    ports:
+      - '8025:8025'
+      - '1025:1025'
